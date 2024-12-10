@@ -1,1 +1,2 @@
-# Looking_inside_for_more
+# Look Inside for More: Internal Spatial Modality Perception for 3D Anomaly Detection
+This is the official implementation of the AAAI25 paper "Look Inside for More: Internal Spatial Modality Perception for 3D Anomaly Detection". We will publish the implementation of the relevant model here. Due to the maintainer schedule, the release time will be after the conference, if you have any questions before then, please contact us at 2023362051@email.szu.edu.cn
