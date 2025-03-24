@@ -12,7 +12,7 @@ This is the Reproducible Realisation of the AAAI25 paper ["Look Inside for More:
 
 Our code implementation is based on the Nips23 paper "Real3D-AD: A Dataset of Point Cloud Anomaly Detection" and we thank them for their work!
 
-Similar to their work, our code is also stochastic, and the results in the paper are obtained by means of the mean. If there are some discrepancies between your implementation and the values in the paper, it may be due to randomness and we are working on addressing it. To try to be as consistent as possible, you can use either the RTX3090 (24GB) graphics card mentioned in the paper or the A100 (40GB) graphics card from when we declassied the code.
+Similar to their work, our code is also stochastic, and the results in the paper are obtained by means of the mean. If there are some discrepancies between your implementation and the values in the paper, it may be due to randomness and we are working on addressing it. To try to be as consistent as possible, you can use either the RTX3090 (24GB) mentioned in the paper or the RTX4090 (24GB) from when we published the code.
 
 ## Data and Checkpoints
 
