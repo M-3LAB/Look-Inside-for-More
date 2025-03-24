@@ -1,5 +1,12 @@
 # Look Inside for More: Internal Spatial Modality Perception for 3D Anomaly Detection
-This is the official implementation of the AAAI25 paper "Look Inside for More: Internal Spatial Modality Perception for 3D Anomaly Detection"[https://arxiv.org/abs/2412.13461]. We will publish the implementation of the relevant model here. Due to the maintainer schedule, the release time will be after the conference, if you have any questions before then, please contact us at 2023362051@email.szu.edu.cn
+Hanzhe Liang, Guoyang Xie, Chengbin Hou, Bingshu Wang, Can Gao†, Jinbao Wang†
+(† Corresponding authors)
+
+# Overview
+This is the Reproducible Realisation of the AAAI25 paper ["Look Inside for More: Internal Spatial Modality Perception for 3D Anomaly Detection"](https://arxiv.org/abs/2412.13461). Because of a server storage disaster, our initial version of the code was lost, but, thanks to the help of some researchers, we have reproduced an approximation of the code for this paper. If you have a better reproduction, please get in touch with us at 2023362051@email.szu.edu.cn.
+
+# ISMP
+![ISMP](./images/example.png)
 
 ## Before that, a few caveats:
 
