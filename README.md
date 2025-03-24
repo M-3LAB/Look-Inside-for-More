@@ -4,7 +4,10 @@ Hanzhe Liang, Guoyang Xie, Chengbin Hou, Bingshu Wang, Can Gao†, Jinbao Wang�
 
 # Overview
 This is the Reproducible Realisation of the AAAI25 paper ["Look Inside for More: Internal Spatial Modality Perception for 3D Anomaly Detection"](https://arxiv.org/abs/2412.13461). 
+
 😭 Because of a server storage disaster, our initial version of the code was lost, however, thanks to the help of some researchers, we have reproduced an approximation of the code for this paper. If you have a better reproduction, please get in touch with us at 2023362051@email.szu.edu.cn.
+
+code1 represents a fast version and code2 represents a more performant version. Note that the code2 implementation seems to perform better than our official implementation, but their implementation is not the same as the storage the authors remember, compliments of their coding abilities!
 
 # ISMP
 ![ISMP](./pipeline.png)
@@ -27,7 +30,20 @@ We implement benchmark under CUDA 11.3 Our environment can be reproduced by the 
 conda env create -f environment.yaml
 pip install "git+git://github.com/erikwijmans/Pointnet2_PyTorch.git#egg=pointnet2_ops&subdirectory=pointnet2_ops_lib"
 ```
-how to train and evaluation
+### how to train and evaluate code 1?
+
+Run it:
+
+```bash
+python3 main.py --gpu 0 --seed 42 --memory_size 10000 --anomaly_scorer_num_nn 3 --faiss_on_gpu --faiss_num_workers 8 sampler -p 0.1 approx_greedy_corest #eval on Real3D-AD
+```
+
+### how to train and evaluate code 2?
+
+First, you need to open the file:```root/miniconda3/lib/python3.8/site-packages/faiss/__init__.py```. Then, replace this file with the```__init__.py``` our provided.
+
+Run it:
+
 ```bash
 python3 main.py --gpu 0 --seed 42 --memory_size 10000 --anomaly_scorer_num_nn 3 --faiss_on_gpu --faiss_num_workers 8 sampler -p 0.1 approx_greedy_corest #eval on Real3D-AD
 ```
