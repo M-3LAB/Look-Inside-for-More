@@ -49,9 +49,12 @@ python3 main.py --gpu 0 --seed 42 --memory_size 10000 --anomaly_scorer_num_nn 3 
 ```
 
 # Please Note
-Our code, submitted by other researchers, is missing some of the implementation, but achieves some of the performance, and we welcome new submissions to exceed the level in the paper.
+Our code was submitted by other researchers and is missing some of the implementations, code1 is efficient but not very performant, code2 achieves some of the better performance but is slower, and we welcome new submissions that exceed the level in the paper.
+
 # Acknowledgments
 This work was supported by the National Natural Science Foundation of China (Grant Nos. 62206122, 62476171, 82261138629, 62302309), the Guangdong Basic and Applied Basic Research Foundation (No. 2024A1515011367), the Guangdong Provincial Key Laboratory (Grant No. 2023B1212060076), Shenzhen Municipal Science and Technology Innovation Council (Grant No. JCYJ20220531101412030), Tencent ``Rhinoceros Birds” - Scientific Research Foundation for Young Teachers of Shenzhen University, and the Internal Fund of National Engineering Laboratory for Big Data System Computing Technology (Grant No. SZU-BDSC-IF2024-08).
+
+The code was submitted by two anonymous researchers and the names of the contributors will be published if permitted by them.
 
 # BibTex Citation
 If you find this paper and repository useful, please cite our paper:
