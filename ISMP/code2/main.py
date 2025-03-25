@@ -60,13 +60,9 @@ def run(
     )
     dataset_name = class_name
     result_collect = []
-    root_dir = './data/Real3D-AD-PCD'
+    root_dir = './Real3D-AD-PCD'
     save_root_dir = './benchmark/reg3dad/'
-    print('Task start: Reg3DAD')
-    # dataset_name = methods["class_name"]
-#     real_3d_classes = ['seahorse', 'diamond','airplane','shell','car','candybar','chicken',
-#                    'duck','fish','gemstone',
-#                    'starfish','toffees']
+    print('Task start: ISMP')
     LOGGER.info(
         "Evaluating dataset [{}]...".format(
             class_name
@@ -186,12 +182,6 @@ def run(
         scores_fpfh, segmentations_fpfh, labels_gt_fpfh, masks_gt_fpfh = PatchCore2.predict_pmae(
             test_loader
         )
-        aggregator_fpfh["scores"].append(scores_fpfh)
-        scores_fpfh = np.array(aggregator_fpfh["scores"])
-        min_scores_fpfh = scores_fpfh.min(axis=-1).reshape(-1, 1)
-        max_scores_fpfh = scores_fpfh.max(axis=-1).reshape(-1, 1)
-        scores_fpfh = (scores_fpfh - min_scores_fpfh) / (max_scores_fpfh - min_scores_fpfh)
-        scores_fpfh = np.mean(scores_fpfh, axis=0)
         ap_seg_fpfh = np.asarray(segmentations_fpfh)
         ap_seg_fpfh = ap_seg_fpfh.flatten()
         min_seg_fpfh = np.min(ap_seg_fpfh)
