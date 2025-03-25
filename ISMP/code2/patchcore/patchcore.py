@@ -48,7 +48,6 @@ class ISMP(torch.nn.Module):
         anomaly_score_num_nn=1,
         featuresampler=patchcore.sampler.IdentitySampler(),
         nn_method=patchcore.common.FaissNN(False, 4),
-        nn_method2=patchcore.common.FaissNN(False, 4),
         basic_template=None,
         **kwargs,
     ):
@@ -71,16 +70,12 @@ class ISMP(torch.nn.Module):
         self.anomaly_scorer = patchcore.common.NearestNeighbourScorer(
             n_nearest_neighbours=anomaly_score_num_nn, nn_method=nn_method
         )
-        self.anomaly_scorer2 = patchcore.common.NearestNeighbourScorer2(
-            n_nearest_neighbours=anomaly_score_num_nn, nn_method=nn_method2
-        )
         
         self.eff = models.efficientnet_b0(pretrained=True)
         self.eff.classifier = torch.nn.Identity()
         self.eff.eval()
         
         self.featuresampler = featuresampler
-        self.featuresampler2 = featuresampler
         self.dataloader_count = 0
         self.basic_template = basic_template
         self.deep_feature_extractor = None
@@ -153,8 +148,20 @@ class ISMP(torch.nn.Module):
         SIE_feature = SIE_feature.repeat(n, 1)
         feature = np.concatenate((SIE_feature, local_feature), axis=1)
         # print(feature.shape, SIE_feature.shape, local_feature.shape)
-        return local_feature, feature, center_idx
+        return feature,center_idx
 
+    def _embed_pointmae2(self, point_cloud, detach=True):
+        reg_data = get_registration_np(point_cloud.squeeze(0).cpu().numpy(),self.basic_template)
+        fpfh_features = self._embed_fpfh(reg_data)
+        pointcloud_data = torch.from_numpy(reg_data).permute(1,0).unsqueeze(0).cuda().float()
+        # print(pointcloud_data.shape)
+        pmae_features, center, ori_idx, center_idx = self.deep_feature_extractor(pointcloud_data)
+        pmae_features = pmae_features.squeeze(0).permute(1,0).cpu().numpy()
+        pmae_features = pmae_features.astype(np.float32)    
+        fpfh_features = fpfh_features[center_idx.cpu().numpy()].squeeze(0)
+        local_feature = np.concatenate((fpfh_features, pmae_features), axis=1)
+        return local_feature,center_idx
+    
     def fit(self, training_data):
         """PatchCore training.
 
@@ -258,42 +265,6 @@ class ISMP(torch.nn.Module):
         self.anomaly_scorer.fit(detection_features=[features])
         print(features.shape)
         return features
-    
-    def fit_with_limit_size_fpfh(self, training_data, limit_size):
-        """PatchCore training.
-
-        This function computes the embeddings of the training data and fills the
-        memory bank of SPADE.
-        """
-        return self._fill_memory_bank_with_limit_size_fpfh(training_data, limit_size)
-        
-    def _fill_memory_bank_with_limit_size_fpfh(self, input_data, limit_size):
-        """Computes and sets the support features for SPADE."""
-        _ = self.forward_modules.eval()
-
-        def _image_to_features(input_pointcloud):
-            with torch.no_grad():
-                
-                return self._embed_fpfh(input_pointcloud)
-
-        features, features2 = [], []
-        with tqdm.tqdm(
-            input_data, desc="Computing support features...", position=1, leave=False
-        ) as data_iterator:
-            for input_pointcloud, mask, label, path in data_iterator:
-                a, b =_image_to_features(input_pointcloud)
-                features.append(a)
-                features2.append(b)
-                
-
-        features = np.concatenate(features, axis=0)
-        features2 = np.concatenate(features2, axis=0)
-        
-        features = self.featuresampler.run_with_limit_memory(features, limit_size)
-        features2 = self.featuresampler.run_with_limit_memory(features2, limit_size)
-        self.anomaly_scorer.fit(detection_features=[features])
-        self.anomaly_scorer2.fit(detection_features=[features2])
-        return features
 
     def fit_with_limit_size_pmae(self, training_data, limit_size):
         """PatchCore training.
@@ -309,27 +280,52 @@ class ISMP(torch.nn.Module):
 
         def _image_to_features(input_pointcloud):
             with torch.no_grad():
-                f1,f2, sample_idx =self._embed_pointmae(input_pointcloud)
-                return f1,f2
+                pmae_features, sample_idx =self._embed_pointmae(input_pointcloud)
+                return pmae_features
 
-        features, features2 = [], []
+        features = []
         with tqdm.tqdm(
             input_data, desc="Computing support features...", position=1, leave=False
         ) as data_iterator:
             for input_pointcloud, mask, label, path in data_iterator:
-                a, b =_image_to_features(input_pointcloud)
-                features.append(a)
-                features2.append(b)
-        
+                features.append(_image_to_features(input_pointcloud))
+
         features = np.concatenate(features, axis=0)
-        features2 = np.concatenate(features2, axis=0)
         features = self.featuresampler.run_with_limit_memory(features, limit_size)
-        features2 = self.featuresampler2.run_with_limit_memory(features2, limit_size)
         self.anomaly_scorer.fit(detection_features=[features])
-        self.anomaly_scorer2.fit(detection_features=[features2])
-        # print(features.shape,features2.shape, self.anomaly_scorer, self.anomaly_scorer2)
+        print(features.shape)
         return features
 
+    def fit_with_limit_size_pmae2(self, training_data, limit_size):
+        """PatchCore training.
+
+        This function computes the embeddings of the training data and fills the
+        memory bank of SPADE.
+        """
+        return self._fill_memory_bank_with_limit_size_pmae2(training_data, limit_size)
+        
+    def _fill_memory_bank_with_limit_size_pmae2(self, input_data, limit_size):
+        """Computes and sets the support features for SPADE."""
+        _ = self.forward_modules.eval()
+
+        def _image_to_features(input_pointcloud):
+            with torch.no_grad():
+                pmae_features, sample_idx =self._embed_pointmae2(input_pointcloud)
+                return pmae_features
+
+        features = []
+        with tqdm.tqdm(
+            input_data, desc="Computing support features...", position=1, leave=False
+        ) as data_iterator:
+            for input_pointcloud, mask, label, path in data_iterator:
+                features.append(_image_to_features(input_pointcloud))
+
+        features = np.concatenate(features, axis=0)
+        features = self.featuresampler.run_with_limit_memory(features, limit_size)
+        self.anomaly_scorer.fit(detection_features=[features])
+        # print(features.shape)
+        return features
+    
     def predict(self, data):
         if isinstance(data, torch.utils.data.DataLoader):
             return self._predict_dataloader(data)
@@ -384,17 +380,46 @@ class ISMP(torch.nn.Module):
 
     def _predict_pmae(self, input_pointcloud):
         with torch.no_grad():
-            features, features2, sample_dix = self._embed_pointmae(input_pointcloud)
+            features, sample_dix = self._embed_pointmae2(input_pointcloud)
             features = np.asarray(features,order='C').astype('float32')
-            features2 = np.asarray(features2,order='C').astype('float32')
             patch_scores = image_scores = self.anomaly_scorer.predict([features])[0]
-            patch_scores2 = image_scores2 = self.anomaly_scorer2.predict([features2])[0]
-            image_scores2 = np.max(image_scores2)
+            image_scores = np.max(image_scores)
             mask_idx = sample_dix.squeeze().long()
             xyz_sampled = input_pointcloud[0][mask_idx.cpu(),:]
             full_scores = fill_missing_values(xyz_sampled,patch_scores,input_pointcloud[0], k=1)
-        return [image_scores2], [mask for mask in full_scores]
+        return [image_scores], [mask for mask in full_scores]
 
+    def predict_pmae2(self, data):
+        if isinstance(data, torch.utils.data.DataLoader):
+            return self._predict_dataloader_pmae(data)
+        return self._predict_pmae(data)
+
+    def _predict_dataloader_pmae2(self, dataloader):
+        """This function provides anomaly scores/maps for full dataloaders."""
+        _ = self.forward_modules.eval()
+        scores = []
+        masks = []
+        labels_gt = []
+        masks_gt = []
+        with tqdm.tqdm(dataloader, desc="Inferring...", leave=False) as data_iterator:
+            for input_pointcloud, mask, label, path in data_iterator:
+                labels_gt.extend(label.numpy().tolist())
+                masks_gt.extend(mask.numpy().tolist())
+                _scores, _masks = self._predict_pmae(input_pointcloud)
+                scores.extend(_scores)
+                masks.extend(_masks)
+        return scores, masks, labels_gt, masks_gt
+
+    def _predict_pmae2(self, input_pointcloud):
+        with torch.no_grad():
+            features, sample_dix = self._embed_pointmae2(input_pointcloud)
+            features = np.asarray(features,order='C').astype('float32')
+            patch_scores = image_scores = self.anomaly_scorer.predict([features])[0]
+            image_scores = np.max(image_scores)
+            mask_idx = sample_dix.squeeze().long()
+            xyz_sampled = input_pointcloud[0][mask_idx.cpu(),:]
+            full_scores = fill_missing_values(xyz_sampled,patch_scores,input_pointcloud[0], k=1)
+        return [image_scores], [mask for mask in full_scores]
     
     def process_point_cloud(self, point_cloud):
         min_x = np.min(point_cloud[:, 0])
