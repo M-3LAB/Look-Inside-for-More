@@ -31,7 +31,17 @@ LOGGER = logging.getLogger(__name__)
 @click.option("--gpu", type=int, default=[0], multiple=True, show_default=True)
 @click.option("--seed", type=int, default=0, show_default=True)
 @click.option("--memory_size", type=int, default=10000, show_default=True)
+# Parameters for Glue-code (to merge different parts of the pipeline.
+# @click.option("--preprocessing", type=click.Choice(["mean", "conv"]), default="mean")
+# @click.option("--aggregation", type=click.Choice(["mean", "mlp"]), default="mean")
+# Nearest-Neighbour Anomaly Scorer parameters.
 @click.option("--anomaly_scorer_num_nn", type=int, default=5)
+# Patch-parameters.
+# @click.option("--patchsize", type=int, default=3)
+# @click.option("--patchscore", type=str, default="max")
+# @click.option("--patchoverlap", type=float, default=0.0)
+# @click.option("--patchsize_aggregate", "-pa", type=int, multiple=True, default=[])
+# NN on GPU.
 @click.option("--faiss_on_gpu", is_flag=True, default=True)
 @click.option("--faiss_num_workers", type=int, default=8)
 def main(**kwargs):
@@ -62,7 +72,9 @@ def run(
     save_root_dir = './benchmark/reg3dad/'
     print('Task start: Reg3DAD')
     
-    real_3d_classes = ['seahorse', 'diamond','airplane','shell','car','candybar','chicken', 'duck','fish','gemstone', 'starfish','toffees']
+    real_3d_classes = ['seahorse', 'diamond','airplane','shell','car','candybar','chicken',
+                   'duck','fish','gemstone',
+                   'starfish','toffees']
 
     for dataset_count, dataset_name in enumerate(real_3d_classes):
         LOGGER.info(
@@ -89,6 +101,7 @@ def run(
             sampler = methods["get_sampler"](
                 device,
             )
+            # PatchCore_list = methods["get_patchcore"](imagesize, sampler, device)
             nn_method = patchcore.common.FaissNN(faiss_on_gpu, faiss_num_workers)
 
             PatchCore = patchcore.patchcore.ISMP(device)
@@ -122,7 +135,7 @@ def run(
             max_scores_fpfh = scores_fpfh2.max(axis=-1).reshape(-1, 1)
             scores_fpfh2 = (scores_fpfh2 - min_scores_fpfh) / (max_scores_fpfh - min_scores_fpfh)
             scores_fpfh2 = np.mean(scores_fpfh2, axis=0)
-            ap_seg_fpfh2 = np.asarray(segmentations_p)
+            ap_seg_fpfh2 = np.asarray(segmentations_fpfh2)
             ap_seg_fpfh2 = ap_seg_fpfh2.flatten()
             min_seg_fpfh = np.min(ap_seg_fpfh2)
             max_seg_fpfh = np.max(ap_seg_fpfh2)
@@ -165,14 +178,14 @@ def run(
             min_seg_xyz = np.min(ap_seg_xyz)
             max_seg_xyz = np.max(ap_seg_xyz)
             ap_seg_xyz = (ap_seg_xyz-min_seg_xyz)/(max_seg_xyz-min_seg_xyz)
-            ########################################################################
+            
             end_time = time.time()
             time_cost = (end_time - start_time)/len(test_loader)
 
 
             LOGGER.info("Computing evaluation metrics.")
-            scores = (scores_xyz+scores_fpfh2)/2
-            ap_seg = (ap_seg_fpfh+ap_seg_xyz)/2
+            scores = (scores_xyz+scores_fpfh)/2
+            ap_seg = (ap_seg_fpfh2+ap_seg_xyz)/2
             auroc = patchcore.metrics.compute_imagewise_retrieval_metrics(
                 scores, labels_gt
             )["auroc"]
