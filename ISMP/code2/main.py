@@ -68,7 +68,7 @@ def run(
     )
 
     result_collect = []
-    root_dir = './Real3D-AD-PCD'
+    root_dir = './data/Real3D-AD-PCD'
     save_root_dir = './benchmark/reg3dad/'
     print('Task start: Reg3DAD')
     
