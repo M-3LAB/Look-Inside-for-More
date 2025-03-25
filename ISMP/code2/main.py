@@ -58,13 +58,11 @@ def run(
     )
 
     result_collect = []
-    root_dir = './data/Real3D-AD-PCD'
+    root_dir = './Real3D-AD-PCD'
     save_root_dir = './benchmark/reg3dad/'
     print('Task start: Reg3DAD')
     
-    real_3d_classes = ['seahorse','diamond','airplane','shell','car','candybar','chicken',
-                   'duck','fish','gemstone',
-                   'starfish','toffees']
+    real_3d_classes = ['seahorse', 'diamond','airplane','shell','car','candybar','chicken', 'duck','fish','gemstone', 'starfish','toffees']
 
     for dataset_count, dataset_name in enumerate(real_3d_classes):
         LOGGER.info(
@@ -91,7 +89,6 @@ def run(
             sampler = methods["get_sampler"](
                 device,
             )
-            # PatchCore_list = methods["get_patchcore"](imagesize, sampler, device)
             nn_method = patchcore.common.FaissNN(faiss_on_gpu, faiss_num_workers)
 
             PatchCore = patchcore.patchcore.ISMP(device)
@@ -112,6 +109,26 @@ def run(
             
             torch.cuda.empty_cache()
             PatchCore.set_deep_feature_extractor()
+            ######################################################################## 
+            memory_feature = PatchCore.fit_with_limit_size_pmae2(train_loader, memory_size)
+            aggregator_p = {"scores": [], "segmentations": []}
+            start_time = time.time()
+            scores_fpfh2, segmentations_fpfh2, labels_gt_fpfh2, masks_gt_fpfh2 = PatchCore.predict_pmae2(
+                test_loader
+            )
+            aggregator_p["scores"].append(scores_fpfh2)
+            scores_fpfh2 = np.array(aggregator_p["scores"])
+            min_scores_fpfh = scores_fpfh2.min(axis=-1).reshape(-1, 1)
+            max_scores_fpfh = scores_fpfh2.max(axis=-1).reshape(-1, 1)
+            scores_fpfh2 = (scores_fpfh2 - min_scores_fpfh) / (max_scores_fpfh - min_scores_fpfh)
+            scores_fpfh2 = np.mean(scores_fpfh2, axis=0)
+            ap_seg_fpfh2 = np.asarray(segmentations_p)
+            ap_seg_fpfh2 = ap_seg_fpfh2.flatten()
+            min_seg_fpfh = np.min(ap_seg_fpfh2)
+            max_seg_fpfh = np.max(ap_seg_fpfh2)
+            ap_seg_fpfh2 = (ap_seg_fpfh2-min_seg_fpfh)/(max_seg_fpfh-min_seg_fpfh)
+            
+            ########################################################################
             memory_feature = PatchCore.fit_with_limit_size_pmae(train_loader, memory_size)
             aggregator_fpfh = {"scores": [], "segmentations": []}
             start_time = time.time()
@@ -129,8 +146,8 @@ def run(
             min_seg_fpfh = np.min(ap_seg_fpfh)
             max_seg_fpfh = np.max(ap_seg_fpfh)
             ap_seg_fpfh = (ap_seg_fpfh-min_seg_fpfh)/(max_seg_fpfh-min_seg_fpfh)
-            
-            # xyz
+                
+            ########################################################################
             torch.cuda.empty_cache()
             memory_feature_ = PatchCore.fit_with_limit_size(train_loader, memory_size)
             aggregator_xyz = {"scores": [], "segmentations": []}
@@ -138,7 +155,6 @@ def run(
                 test_loader
             )
             aggregator_xyz["scores"].append(scores_xyz)
-            # aggregator["segmentations"].append(segmentations)
             scores_xyz = np.array(aggregator_xyz["scores"])
             min_scores_xyz = scores_xyz.min(axis=-1).reshape(-1, 1)
             max_scores_xyz = scores_xyz.max(axis=-1).reshape(-1, 1)
@@ -149,13 +165,13 @@ def run(
             min_seg_xyz = np.min(ap_seg_xyz)
             max_seg_xyz = np.max(ap_seg_xyz)
             ap_seg_xyz = (ap_seg_xyz-min_seg_xyz)/(max_seg_xyz-min_seg_xyz)
-            
+            ########################################################################
             end_time = time.time()
             time_cost = (end_time - start_time)/len(test_loader)
 
 
             LOGGER.info("Computing evaluation metrics.")
-            scores = (scores_xyz+scores_fpfh)/2
+            scores = (scores_xyz+scores_fpfh2)/2
             ap_seg = (ap_seg_fpfh+ap_seg_xyz)/2
             auroc = patchcore.metrics.compute_imagewise_retrieval_metrics(
                 scores, labels_gt
