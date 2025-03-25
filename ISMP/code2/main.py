@@ -32,7 +32,7 @@ LOGGER = logging.getLogger(__name__)
 @click.option("--seed", type=int, default=0, show_default=True)
 @click.option("--memory_size", type=int, default=10000, show_default=True)
 @click.option("--anomaly_scorer_num_nn", type=int, default=5)
-@click.option("--class_name", type=str, default="airplane")
+@click.option("--class_name", type=str)
 @click.option("--faiss_on_gpu", is_flag=True, default=True)
 @click.option("--faiss_num_workers", type=int, default=8)
 def main(**kwargs):
@@ -63,6 +63,10 @@ def run(
     root_dir = './Real3D-AD-PCD'
     save_root_dir = './benchmark/reg3dad/'
     print('Task start: Reg3DAD')
+    # dataset_name = methods["class_name"]
+#     real_3d_classes = ['seahorse', 'diamond','airplane','shell','car','candybar','chicken',
+#                    'duck','fish','gemstone',
+#                    'starfish','toffees']
     LOGGER.info(
         "Evaluating dataset [{}]...".format(
             class_name
@@ -88,8 +92,8 @@ def run(
         # PatchCore_list = methods["get_patchcore"](imagesize, sampler, device)
         nn_method = patchcore.common.FaissNN(faiss_on_gpu, faiss_num_workers)
 
-        PatchCore = patchcore.patchcore.ISMP(device)
-        PatchCore.load(
+        PatchCore1, PatchCore2, PatchCore3 = patchcore.patchcore.ISMP(device), patchcore.patchcore.ISMP(device), patchcore.patchcore.ISMP(device)
+        PatchCore1.load(
             backbone=None,
             layers_to_extract_from=None,
             device=device,
@@ -104,32 +108,82 @@ def run(
             basic_template=basic_template,
         )
 
-        torch.cuda.empty_cache()
-        PatchCore.set_deep_feature_extractor()
-        ######################################################################## 
-        memory_feature = PatchCore.fit_with_limit_size_pmae2(train_loader, memory_size)
-        aggregator_p = {"scores": [], "segmentations": []}
+        PatchCore2.load(
+            backbone=None,
+            layers_to_extract_from=None,
+            device=device,
+            input_shape=None,
+            pretrain_embed_dimension=1024,
+            target_embed_dimension=1024,
+            patchsize=16,
+            featuresampler=sampler,
+            anomaly_scorer_num_nn=anomaly_scorer_num_nn,
+            nn_method=nn_method,
+            nn_method2=nn_method,
+            basic_template=basic_template,
+        )
+        
+        PatchCore3.load(
+            backbone=None,
+            layers_to_extract_from=None,
+            device=device,
+            input_shape=None,
+            pretrain_embed_dimension=1024,
+            target_embed_dimension=1024,
+            patchsize=16,
+            featuresampler=sampler,
+            anomaly_scorer_num_nn=anomaly_scorer_num_nn,
+            nn_method=nn_method,
+            nn_method2=nn_method,
+            basic_template=basic_template,
+        )
         start_time = time.time()
-        scores_fpfh2, segmentations_fpfh2, labels_gt_fpfh2, masks_gt_fpfh2 = PatchCore.predict_pmae2(
+        ######################################################################## 
+        torch.cuda.empty_cache()
+        PatchCore3.set_deep_feature_extractor()
+        memory_feature_ = PatchCore3.fit_with_limit_size(train_loader, memory_size)
+        aggregator_xyz = {"scores": [], "segmentations": []}
+        scores_xyz, segmentations_xyz, labels_gt, masks_gt = PatchCore3.predict(
+            test_loader
+        )
+        aggregator_xyz["scores"].append(scores_xyz)
+        scores_xyz = np.array(aggregator_xyz["scores"])
+        min_scores_xyz = scores_xyz.min(axis=-1).reshape(-1, 1)
+        max_scores_xyz = scores_xyz.max(axis=-1).reshape(-1, 1)
+        scores_xyz = (scores_xyz - min_scores_xyz) / (max_scores_xyz - min_scores_xyz)
+        scores_xyz = np.mean(scores_xyz, axis=0)
+        ap_seg_xyz = np.asarray(segmentations_xyz)
+        ap_seg_xyz = ap_seg_xyz.flatten()
+        min_seg_xyz = np.min(ap_seg_xyz)
+        max_seg_xyz = np.max(ap_seg_xyz)
+        ap_seg_xyz = (ap_seg_xyz-min_seg_xyz)/(max_seg_xyz-min_seg_xyz)
+        
+        del PatchCore3
+        ########################################################################
+        torch.cuda.empty_cache()
+        PatchCore1.set_deep_feature_extractor()
+        memory_feature = PatchCore1.fit_with_limit_size_pmae2(train_loader, memory_size)
+        aggregator_p = {"scores": [], "segmentations": []}
+        
+        scores_fpfh2, segmentations_fpfh2, labels_gt_fpfh2, masks_gt_fpfh2 = PatchCore1.predict_pmae2(
             test_loader
         )
         aggregator_p["scores"].append(scores_fpfh2)
         scores_fpfh2 = np.array(aggregator_p["scores"])
-        min_scores_fpfh = scores_fpfh2.min(axis=-1).reshape(-1, 1)
-        max_scores_fpfh = scores_fpfh2.max(axis=-1).reshape(-1, 1)
-        scores_fpfh2 = (scores_fpfh2 - min_scores_fpfh) / (max_scores_fpfh - min_scores_fpfh)
-        scores_fpfh2 = np.mean(scores_fpfh2, axis=0)
         ap_seg_fpfh2 = np.asarray(segmentations_fpfh2)
         ap_seg_fpfh2 = ap_seg_fpfh2.flatten()
         min_seg_fpfh = np.min(ap_seg_fpfh2)
         max_seg_fpfh = np.max(ap_seg_fpfh2)
         ap_seg_fpfh2 = (ap_seg_fpfh2-min_seg_fpfh)/(max_seg_fpfh-min_seg_fpfh)
 
+        del PatchCore1
         ########################################################################
-        memory_feature = PatchCore.fit_with_limit_size_pmae(train_loader, memory_size)
+        torch.cuda.empty_cache()
+        PatchCore2.set_deep_feature_extractor()
+        memory_feature = PatchCore2.fit_with_limit_size_pmae(train_loader, memory_size)
         aggregator_fpfh = {"scores": [], "segmentations": []}
         start_time = time.time()
-        scores_fpfh, segmentations_fpfh, labels_gt_fpfh, masks_gt_fpfh = PatchCore.predict_pmae(
+        scores_fpfh, segmentations_fpfh, labels_gt_fpfh, masks_gt_fpfh = PatchCore2.predict_pmae(
             test_loader
         )
         aggregator_fpfh["scores"].append(scores_fpfh)
@@ -144,29 +198,11 @@ def run(
         max_seg_fpfh = np.max(ap_seg_fpfh)
         ap_seg_fpfh = (ap_seg_fpfh-min_seg_fpfh)/(max_seg_fpfh-min_seg_fpfh)
 
+        del PatchCore2
         ########################################################################
-        torch.cuda.empty_cache()
-        memory_feature_ = PatchCore.fit_with_limit_size(train_loader, memory_size)
-        aggregator_xyz = {"scores": [], "segmentations": []}
-        scores_xyz, segmentations_xyz, labels_gt, masks_gt = PatchCore.predict(
-            test_loader
-        )
-        aggregator_xyz["scores"].append(scores_xyz)
-        scores_xyz = np.array(aggregator_xyz["scores"])
-        min_scores_xyz = scores_xyz.min(axis=-1).reshape(-1, 1)
-        max_scores_xyz = scores_xyz.max(axis=-1).reshape(-1, 1)
-        scores_xyz = (scores_xyz - min_scores_xyz) / (max_scores_xyz - min_scores_xyz)
-        scores_xyz = np.mean(scores_xyz, axis=0)
-        ap_seg_xyz = np.asarray(segmentations_xyz)
-        ap_seg_xyz = ap_seg_xyz.flatten()
-        min_seg_xyz = np.min(ap_seg_xyz)
-        max_seg_xyz = np.max(ap_seg_xyz)
-        ap_seg_xyz = (ap_seg_xyz-min_seg_xyz)/(max_seg_xyz-min_seg_xyz)
 
         end_time = time.time()
         time_cost = (end_time - start_time)/len(test_loader)
-
-
         LOGGER.info("Computing evaluation metrics.")
         scores = (scores_xyz+scores_fpfh)/2
         ap_seg = (ap_seg_fpfh2+ap_seg_xyz)/2
