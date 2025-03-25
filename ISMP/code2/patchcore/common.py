@@ -54,7 +54,6 @@ class FaissNN(object):
         Args:
             features: Array of size NxD.
         """
-        print(features.shape)
         if self.search_index:
             self.reset_index()
         self.search_index = self._create_index(features.shape[-1])
@@ -77,9 +76,7 @@ class FaissNN(object):
             query_features: Features to retrieve.
             index_features: [optional] Index features to search in.
         """
-        print(query_features.shape,"111")
         if index_features is None:
-            print(query_features.shape) # 1568,768 8*196*768
             # print(n_nearest_neighbours) # 1
             return self.search_index.search(query_features, n_nearest_neighbours)
 
