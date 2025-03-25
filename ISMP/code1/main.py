@@ -31,17 +31,7 @@ LOGGER = logging.getLogger(__name__)
 @click.option("--gpu", type=int, default=[0], multiple=True, show_default=True)
 @click.option("--seed", type=int, default=0, show_default=True)
 @click.option("--memory_size", type=int, default=10000, show_default=True)
-# Parameters for Glue-code (to merge different parts of the pipeline.
-# @click.option("--preprocessing", type=click.Choice(["mean", "conv"]), default="mean")
-# @click.option("--aggregation", type=click.Choice(["mean", "mlp"]), default="mean")
-# Nearest-Neighbour Anomaly Scorer parameters.
 @click.option("--anomaly_scorer_num_nn", type=int, default=5)
-# Patch-parameters.
-# @click.option("--patchsize", type=int, default=3)
-# @click.option("--patchscore", type=str, default="max")
-# @click.option("--patchoverlap", type=float, default=0.0)
-# @click.option("--patchsize_aggregate", "-pa", type=int, multiple=True, default=[])
-# NN on GPU.
 @click.option("--faiss_on_gpu", is_flag=True, default=True)
 @click.option("--faiss_num_workers", type=int, default=8)
 def main(**kwargs):
@@ -116,12 +106,10 @@ def run(
                 featuresampler=sampler,
                 anomaly_scorer_num_nn=anomaly_scorer_num_nn,
                 nn_method=nn_method,
+                nn_method2=nn_method,
                 basic_template=basic_template,
             )
             
-            # '''
-            # print(dataset_name)
-            # fpfh
             torch.cuda.empty_cache()
             PatchCore.set_deep_feature_extractor()
             memory_feature = PatchCore.fit_with_limit_size_pmae(train_loader, memory_size)
