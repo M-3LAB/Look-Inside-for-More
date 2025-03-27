@@ -137,7 +137,7 @@ def run(
         ######################################################################## 
         torch.cuda.empty_cache()
         PatchCore3.set_deep_feature_extractor()
-        memory_feature_ = PatchCore3.fit_with_limit_size(train_loader, memory_size)
+        _ = PatchCore3.fit_with_limit_size(train_loader, memory_size)
         aggregator_xyz = {"scores": [], "segmentations": []}
         scores_xyz, segmentations_xyz, labels_gt, masks_gt = PatchCore3.predict(
             test_loader
@@ -158,14 +158,12 @@ def run(
         ########################################################################
         torch.cuda.empty_cache()
         PatchCore1.set_deep_feature_extractor()
-        memory_feature = PatchCore1.fit_with_limit_size_pmae2(train_loader, memory_size)
+        _ = PatchCore1.fit_with_limit_size_pmae2(train_loader, memory_size)
         aggregator_p = {"scores": [], "segmentations": []}
         
         scores_fpfh2, segmentations_fpfh2, labels_gt_fpfh2, masks_gt_fpfh2 = PatchCore1.predict_pmae2(
             test_loader
         )
-        aggregator_p["scores"].append(scores_fpfh2)
-        scores_fpfh2 = np.array(aggregator_p["scores"])
         ap_seg_fpfh2 = np.asarray(segmentations_fpfh2)
         ap_seg_fpfh2 = ap_seg_fpfh2.flatten()
         min_seg_fpfh = np.min(ap_seg_fpfh2)
@@ -176,18 +174,18 @@ def run(
         ########################################################################
         torch.cuda.empty_cache()
         PatchCore2.set_deep_feature_extractor()
-        memory_feature = PatchCore2.fit_with_limit_size_pmae(train_loader, memory_size)
+        _ = PatchCore2.fit_with_limit_size_pmae(train_loader, memory_size)
         aggregator_fpfh = {"scores": [], "segmentations": []}
-        start_time = time.time()
-        scores_fpfh, segmentations_fpfh, labels_gt_fpfh, masks_gt_fpfh = PatchCore2.predict_pmae(
+        scores_fpfh, segmentations_fpfh, _, _ = PatchCore2.predict_pmae(
             test_loader
         )
-        ap_seg_fpfh = np.asarray(segmentations_fpfh)
-        ap_seg_fpfh = ap_seg_fpfh.flatten()
-        min_seg_fpfh = np.min(ap_seg_fpfh)
-        max_seg_fpfh = np.max(ap_seg_fpfh)
-        ap_seg_fpfh = (ap_seg_fpfh-min_seg_fpfh)/(max_seg_fpfh-min_seg_fpfh)
-
+        aggregator_fpfh["scores"].append(scores_xyz)
+        scores_fpfh = np.array(aggregator_fpfh["scores"])
+        min_scores_fpfh = scores_fpfh.min(axis=-1).reshape(-1, 1)
+        max_scores_fpfh = scores_fpfh.max(axis=-1).reshape(-1, 1)
+        scores_fpfh = (scores_fpfh - min_scores_fpfh) / (max_scores_fpfh - min_scores_fpfh)
+        scores_fpfh = np.mean(scores_fpfh, axis=0)
+        
         del PatchCore2
         ########################################################################
 
