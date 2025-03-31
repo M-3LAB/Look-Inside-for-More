@@ -24,8 +24,8 @@ Please download the [Real3D-AD dataset](https://github.com/M-3LAB/Real3D-AD?tab=
 
 Please download the [PointMAE checkpoints](https://github.com/Pang-Yatian/Point-MAE/releases/download/main/pretrain.pth) and place it in the directory ```checkpoints/```.
 
-## Our Environment, Train, and Evaluation
-We implement benchmark under CUDA 11.3 Our environment can be reproduced by the following command:
+## Our Environment, Training, and Evaluation
+We implement benchmarks under CUDA 11.3 The following command can reproduce our environment:
 ```bash
 conda env create -f environment.yaml
 pip install "git+git://github.com/erikwijmans/Pointnet2_PyTorch.git#egg=pointnet2_ops&subdirectory=pointnet2_ops_lib"
@@ -55,7 +55,7 @@ python3 main.py \
 # take seahorse for example 
 ```
 
-V1.0(There are some problem in Memory Out of Bounds)
+V1.0(There are some problems in Memory Out of Bounds)
 First, you need to open the file:```root/miniconda3/lib/python3.8/site-packages/faiss/__init__.py```. Then, replace this file with the```__init__.py``` our provided.
 
 Run it:
@@ -65,7 +65,7 @@ python3 main.py --gpu 0 --seed 42 --memory_size 10000 --anomaly_scorer_num_nn 3 
 ```
 
 # Please Note
-Our code was submitted by other researchers and is missing some of the implementations, code1 is efficient but not very performant, code2 achieves some of the better performance but is slower, and we welcome new submissions that exceed the level in the paper.
+Other researchers submitted our code and is missing some of the implementations. code1 is efficient but not very performant, code2 achieves some of the better performance but is slower, and we welcome new submissions that exceed the level in the paper.
 
 # Acknowledgments
 This work was supported by the National Natural Science Foundation of China (Grant Nos. 62206122, 62476171, 82261138629, 62302309), the Guangdong Basic and Applied Basic Research Foundation (No. 2024A1515011367), the Guangdong Provincial Key Laboratory (Grant No. 2023B1212060076), Shenzhen Municipal Science and Technology Innovation Council (Grant No. JCYJ20220531101412030), Tencent ``Rhinoceros Birds” - Scientific Research Foundation for Young Teachers of Shenzhen University, and the Internal Fund of National Engineering Laboratory for Big Data System Computing Technology (Grant No. SZU-BDSC-IF2024-08).
