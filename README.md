@@ -1,4 +1,6 @@
-# Look Inside for More: Internal Spatial Modality Perception for 3D Anomaly Detection
+[![PWC](https://img.shields.io/endpoint.svg?url=https://paperswithcode.com/badge/look-inside-for-more-internal-spatial/3d-anomaly-detection-on-real-3d-ad)](https://paperswithcode.com/sota/3d-anomaly-detection-on-real-3d-ad?p=look-inside-for-more-internal-spatial)
+
+# Look Inside for More: Internal Spatial Modality Perception for 3D Anomaly Detection 
 Hanzhe Liang, Guoyang Xie, Chengbin Hou, Bingshu Wang, Can Gao†, Jinbao Wang†
 († Corresponding authors)
 
