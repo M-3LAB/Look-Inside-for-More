@@ -195,15 +195,24 @@ def run(
         scores = (scores_xyz+scores_fpfh)/2
         ap_seg = (ap_seg_fpfh2+ap_seg_xyz)/2
         auroc = patchcore.metrics.compute_imagewise_retrieval_metrics(
-            scores, labels_gt
-        )["auroc"]
+                scores, labels_gt
+            )["auroc"]
         img_ap = average_precision_score(labels_gt,scores)
-        ap_mask = np.concatenate(np.asarray(masks_gt))
-        ap_mask = ap_mask.flatten().astype(np.int32)
+        import itertools
+        ap_mask = np.array(masks_gt, dtype=object)
+            
+        ap_mask = [np.asarray(mask) for mask in ap_mask]
+            
+        flattened_masks = [mask.flatten() for mask in ap_mask]
+            
+        flattened_masks = list(itertools.chain.from_iterable(flattened_masks))
+            
+        ap_mask = np.array(flattened_masks, dtype=np.int32)
+
         pixel_ap = average_precision_score(ap_mask,ap_seg)
         full_pixel_auroc = roc_auc_score(ap_mask,ap_seg)
-        print('Task:{}, image_auc:{}, pixel_auc:{}, image_ap:{}, pixel_ap:{}, time_cost:{}'.format
-                (dataset_name,auroc,full_pixel_auroc,img_ap,pixel_ap,time_cost))
+        print('Task:{}, object_auroc:{}, point_auroc:{}, object_aupr:{}, point_aupr:{}'.format
+                    (dataset_name,auroc,full_pixel_auroc,img_ap,pixel_ap))
 
 
 @main.command("sampler")
