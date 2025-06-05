@@ -12,16 +12,17 @@ This is the Reproducible Realisation of the AAAI25 paper ["Look Inside for More:
 # UPDATE: 
 Maybe you're looking for more detailed data from this paper, such as the O-AUROC results on anomaly-shapeNet. We found other authors in some papers reproducing our results with O-AUROC around 0.79. Please contact me if you need detailed data.
 
-😭 Because of a server storage disaster, our initial version of the code was lost, however, thanks to the help of some researchers, we have reproduced an approximation of the code for this paper. If you have a better reproduction, please get in touch with us at 2023362051@email.szu.edu.cn.
-
-😊 code1 represents a fast version and code2 represents a more performant version. Note that the code2 implementation seems to perform better than our official implementation, but their implementation is not the same as the storage the authors remember. There may have some bugs the author dose not find, please tell us.
 
 # ISMP
 ![ISMP](./pipeline.png)
 
 ## Before that, a few caveats:
 
-🚀Our code implementation is based on the Nips23 paper "Real3D-AD: A Dataset of Point Cloud Anomaly Detection" and we thank them for their work!
+😭 Because of a server storage disaster, our initial version of the code was lost, however, thanks to the help of some researchers, we have reproduced an approximation of the code for this paper. If you have a better reproduction, please get in touch with us at 2023362051@email.szu.edu.cn.
+
+😊 code1 represents a fast version and code2 represents a more performant version. Note that the code2 implementation seems to perform better than our official implementation, but their implementation is not the same as the storage the authors remember. There may have some bugs the author dose not find, please tell us.
+
+🚀Our code implementation is based on the Nips23 paper "Real3D-AD: A Dataset of Point Cloud Anomaly Detection"。
 
 🚀Similar to their work, our code is also stochastic, and the results in the paper are obtained by means of the mean. If there are some discrepancies between your implementation and the values in the paper, it may be due to randomness and we are working on addressing it. To try to be as consistent as possible, you can use either the RTX3090 (24GB) mentioned in the paper or the A100 (40GB) from when we published the code.
 
