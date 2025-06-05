@@ -9,6 +9,8 @@ Hanzhe Liang, Guoyang Xie, Chengbin Hou, Bingshu Wang, Can Gao†, Jinbao Wang�
 # Overview
 This is the Reproducible Realisation of the AAAI25 paper ["Look Inside for More: Internal Spatial Modality Perception for 3D Anomaly Detection"](https://arxiv.org/abs/2412.13461). 
 
+# UPDATE: Maybe you're looking for more detailed data from this paper, such as the O-AUROC results on anomaly-shapeNet. We found other authors in some papers reproducing our results with O-AUROC around 0.79. Please contact me if you need detailed data.
+
 😭 Because of a server storage disaster, our initial version of the code was lost, however, thanks to the help of some researchers, we have reproduced an approximation of the code for this paper. If you have a better reproduction, please get in touch with us at 2023362051@email.szu.edu.cn.
 
 😊 code1 represents a fast version and code2 represents a more performant version. Note that the code2 implementation seems to perform better than our official implementation, but their implementation is not the same as the storage the authors remember. There may have some bugs the author dose not find, please tell us.
