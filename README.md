@@ -43,7 +43,7 @@ pip install "git+git://github.com/erikwijmans/Pointnet2_PyTorch.git#egg=pointnet
 Run it:
 
 ```bash
-python3 main.py --gpu 0 --seed 42 --memory_size 10000 --anomaly_scorer_num_nn 3 --faiss_on_gpu --faiss_num_workers 8 sampler -p 0.1 approx_greedy_corest #eval on Real3D-AD
+ python3 main.py --gpu 0 --seed 42 --memory_size 10000 --anomaly_scorer_num_nn 3 --faiss_on_gpu --faiss_num_workers 8 sampler -p 0.1 approx_greedy_coreset
 ```
 
 ### how to train and evaluate code 2?
