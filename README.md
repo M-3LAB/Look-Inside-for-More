@@ -10,7 +10,7 @@ Hanzhe Liang, Guoyang Xie, Chengbin Hou, Bingshu Wang, Can Gaoâ€ , Jinbao Wangâ€
 This is the Reproducible Realisation of the AAAI25 paper ["Look Inside for More: Internal Spatial Modality Perception for 3D Anomaly Detection"](https://arxiv.org/abs/2412.13461). 
 
 # UPDATE: 
-Maybe you're looking for more detailed data from this paper, such as the O-AUROC results on anomaly-shapeNet. We found other authors in some papers reproducing our results with O-AUROC around 0.79. Please contact me if you need detailed data.
+Maybe you're looking for more detailed data from this paper, such as the O-AUROC results on anomaly-shapeNet. We found other authors in some papers reproducing our results with O-AUROC around 0.79. Please contact me or visit the paper ["Anomaly-Aware Siamese Comparative Transformer for 3D Anomaly Detection"](https://papers.ssrn.com/sol3/papers.cfm?abstract_id=5555382) if you need detailed data.
 
 
 # ISMP
